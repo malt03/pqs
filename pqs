@@ -1,0 +1,95 @@
+#include <Eigen/SparseCore>
+#include <iostream>
+
+using namespace Eigen;
+using namespace std;
+
+namespace pqs{
+  typedef complex<double> cmplx;
+  typedef SparseMatrix<cmplx> sMatrix;
+  typedef SparseMatrix<cmplx> qOperator;
+  
+  class qSystem;
+  class qubit;
+
+  /******************************class******************************/
+  class qSystem{
+	sMatrix *q_system;
+  public:
+	qSystem(){}
+	qSystem(const int qubit_num);
+	qSystem(const int qubit_num, const qubit qubits[]);
+	qSystem(const qSystem* source);
+	qSystem(const sMatrix* value);
+	const sMatrix* getMatrix() const;
+	qSystem* culculate(qOperator& ope);
+  };
+
+  class qubit{
+  public:
+	cmplx state[2];
+	qubit(const cmplx a, const cmplx b);
+  };
+
+  /******************************functions******************************/
+  int powi(const int x, const int y){
+	int ans = 1;
+	for(int i=0;i<y;i++)  ans *= x;
+	return ans;
+  }
+  
+  //qSystem
+  qSystem::qSystem(const int qubit_num){
+	int length = powi(2, qubit_num);
+	q_system = new sMatrix(length, length);
+	q_system->insert(0,0) = cmplx(1.0,0.0);
+  }
+  
+  qSystem::qSystem(const int qubit_num, const qubit qubits[]){
+	int length = powi(2, qubit_num);
+	q_system = new sMatrix(length, length);
+
+	sMatrix x(length,1);
+	for(int i=0;i<length;i++){
+	  cmplx a(1.0,0.0);
+	  for(int j=qubit_num-1;j>=0;j--){
+		a *= qubits[qubit_num-j-1].state[i/powi(2,j)%2];
+		if(a == cmplx(0.0,0.0))	break;
+	  }
+	  if(a != cmplx(0.0,0.0))  x.insert(i,0) = a;
+	}
+	*q_system = x * x.adjoint();
+  }
+
+  qSystem::qSystem(const qSystem* source){
+	q_system = new sMatrix(*(source->getMatrix()));
+  }
+  
+  qSystem::qSystem(const sMatrix* value){
+	q_system = new sMatrix(*value);
+  }
+
+  const sMatrix* qSystem::getMatrix() const{
+	return q_system;
+  }
+
+  qSystem* qSystem::culculate(qOperator& ope){
+	*q_system = ope * (*q_system * ope.adjoint());
+	return this;
+  }
+
+  //qubit
+  qubit::qubit(const cmplx a, const cmplx b){
+	if((abs(a)*abs(a) + abs(b)*abs(b)) < 0.999 || 1.001 < (abs(a)*abs(a) + abs(b)*abs(b))){
+	  cerr << "qubit initialization error! |a|^2+|b|^2=" << abs(a)*abs(a) + abs(b)*abs(b) << endl;
+	}
+	state[0] = a;
+	state[1] = b;
+  }
+
+  //operator
+  ostream& operator<<(ostream& os, const qSystem psi){
+	os << *psi.getMatrix();
+	return os;
+  }
+}

@@ -23,6 +23,8 @@ namespace pqs{
 	qSystem(const sMatrix* value);
 	const sMatrix* getMatrix() const;
 	qSystem* culculate(qOperator& ope);
+	qSystem* culculate(qOperator& ope, int index);
+	qSystem* culculate(qOperator& ope, int index0, int index1);
   };
 
   class qubit{
@@ -78,6 +80,16 @@ namespace pqs{
 	return this;
   }
 
+  qSystem* qSystem::culculate(qOperator& ope, int index){
+	return this;
+  }
+
+  qSystem* qSystem::culculate(qOperator& ope, int index0, int index1){
+	return this;
+  }
+
+  //quantum operators
+
   //qubit
   qubit::qubit(const cmplx a, const cmplx b){
 	if((abs(a)*abs(a) + abs(b)*abs(b)) < 0.999 || 1.001 < (abs(a)*abs(a) + abs(b)*abs(b))){
@@ -92,4 +104,5 @@ namespace pqs{
 	os << *psi.getMatrix();
 	return os;
   }
+
 }

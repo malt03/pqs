@@ -26,16 +26,16 @@ int main(){
   tripletList.push_back(T(1,3,cmplx(-0.5,0.0)));
   tripletList.push_back(T(2,3,cmplx(-0.5,0.0)));
   tripletList.push_back(T(3,3,cmplx(0.5,0.0)));
-  qOperator H(4,4);
-  H.setFromTriplets(tripletList.begin(), tripletList.end());
+  qOperator Hsparse(4,4);
+  Hsparse.setFromTriplets(tripletList.begin(), tripletList.end());
 
   qubit value[] = {
 	qubit(cmplx(1.0,0.0), cmplx(0.0,0.0)),
 	qubit(cmplx(1.0,0.0), cmplx(0.0,0.0)),
   };
-  qSystem psi(2, value);
+  qSystem psi(2,value);
 
-  psi.culculate(H);
-  
+  psi.culculate(Hsparse);
+
   cout << psi << endl;
 }

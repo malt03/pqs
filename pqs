@@ -22,9 +22,9 @@ namespace pqs{
 	qSystem(const qSystem* source);
 	qSystem(const sMatrix* value);
 	const sMatrix* getMatrix() const;
-	qSystem* culculate(qOperator& ope);
-	qSystem* culculate(qOperator& ope, int index);
-	qSystem* culculate(qOperator& ope, int index0, int index1);
+	qSystem* calculate(qOperator& ope);
+	qSystem* calculate(qOperator& ope, int index);
+	qSystem* calculate(qOperator& ope, int index0, int index1);
   };
 
   class qubit{
@@ -75,16 +75,16 @@ namespace pqs{
 	return q_system;
   }
 
-  qSystem* qSystem::culculate(qOperator& ope){
+  qSystem* qSystem::calculate(qOperator& ope){
 	*q_system = ope * (*q_system * ope.adjoint());
 	return this;
   }
 
-  qSystem* qSystem::culculate(qOperator& ope, int index){
+  qSystem* qSystem::calculate(qOperator& ope, int index){
 	return this;
   }
 
-  qSystem* qSystem::culculate(qOperator& ope, int index0, int index1){
+  qSystem* qSystem::calculate(qOperator& ope, int index0, int index1){
 	return this;
   }
 

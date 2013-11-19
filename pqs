@@ -1,5 +1,6 @@
 #include <Eigen/SparseCore>
 #include <iostream>
+#include <cmath>
 
 using namespace Eigen;
 using namespace std;
@@ -11,6 +12,8 @@ namespace pqs{
   
   class qSystem;
   class qubit;
+  int calcIndexNum(int* pos, int len0, int noncalc_num, int calc_num, int len_ans);
+  qOperator* makingQOperator(qOperator* answer, qOperator& ope0, int* pos, int len0, int len_ans);
 
   /******************************class******************************/
   class qSystem{
@@ -21,10 +24,10 @@ namespace pqs{
 	qSystem(const int qubit_num, const qubit qubits[]);
 	qSystem(const qSystem* source);
 	qSystem(const sMatrix* value);
+	~qSystem();
 	const sMatrix* getMatrix() const;
 	qSystem* calculate(qOperator& ope);
-	qSystem* calculate(qOperator& ope, int index);
-	qSystem* calculate(qOperator& ope, int index0, int index1);
+	qSystem* calculate(qOperator& ope, int* index, int len);
   };
 
   class qubit{
@@ -34,28 +37,22 @@ namespace pqs{
   };
 
   /******************************functions******************************/
-  int powi(const int x, const int y){
-	int ans = 1;
-	for(int i=0;i<y;i++)  ans *= x;
-	return ans;
-  }
-  
   //qSystem
   qSystem::qSystem(const int qubit_num){
-	int length = powi(2, qubit_num);
+	int length = 1 << qubit_num;
 	q_system = new sMatrix(length, length);
 	q_system->insert(0,0) = cmplx(1.0,0.0);
   }
   
   qSystem::qSystem(const int qubit_num, const qubit qubits[]){
-	int length = powi(2, qubit_num);
+	int length = 1 << qubit_num;
 	q_system = new sMatrix(length, length);
 
 	sMatrix x(length,1);
 	for(int i=0;i<length;i++){
 	  cmplx a(1.0,0.0);
 	  for(int j=qubit_num-1;j>=0;j--){
-		a *= qubits[qubit_num-j-1].state[i/powi(2,j)%2];
+		a *= qubits[qubit_num-j-1].state[i/(1<<j)%2];
 		if(a == cmplx(0.0,0.0))	break;
 	  }
 	  if(a != cmplx(0.0,0.0))  x.insert(i,0) = a;
@@ -71,6 +68,10 @@ namespace pqs{
 	q_system = new sMatrix(*value);
   }
 
+  qSystem::~qSystem(){
+	//delete q_system;
+  }
+
   const sMatrix* qSystem::getMatrix() const{
 	return q_system;
   }
@@ -80,15 +81,54 @@ namespace pqs{
 	return this;
   }
 
-  qSystem* qSystem::calculate(qOperator& ope, int index){
-	return this;
-  }
+  qSystem* qSystem::calculate(qOperator& q_operator, int* positions, int q_operator_len){
+	int system_len = log(q_system->cols()) / log(2);
+	qOperator last_operator(q_system->cols(),q_system->cols());
+	makingQOperator(&last_operator, q_operator, positions, q_operator_len, system_len);
 
-  qSystem* qSystem::calculate(qOperator& ope, int index0, int index1){
-	return this;
+	return calculate(last_operator);
   }
 
   //quantum operators
+  ////making operator
+  /*****************************
+  ope0    - original operator
+  pos     - calculated qubits' positions
+  len0    - number of qubit0
+  len_ans - number of answer qubit
+  *****************************/
+  qOperator* makingQOperator(qOperator* answer, qOperator& ope0, int* pos, int len0, int len_ans){
+	for(int i=1;i<len0;i++) pos[i] -= i;
+	for(int i=0;i<1<<(len_ans-len0);i++){
+	  for(int j=0;j<1<<len0;j++){
+		int index_col = calcIndexNum(pos, len0, i, j, len_ans);
+		for(int k=0;k<1<<len0;k++){
+		  if(ope0.coeff(k,j) != cmplx(0.0,0.0)){
+			int index_row = calcIndexNum(pos, len0, i, k, len_ans);
+			answer->insert(index_row, index_col) = ope0.coeff(k,j);
+		  }
+		}
+	  }
+	}
+	return answer;
+  }
+
+  int calcIndexNum(int* pos, int len0, int noncalc_num, int calc_num, int len_ans){
+	int bit_len = len_ans - len0;
+	int answers[len0+1];
+	int answer = 0;
+	for(int i=0;i<len0;i++){
+	  answers[i] = noncalc_num;
+	  for(int j=1;j<=i;j++) answers[i] -= answers[i-j];
+	  answers[i] = (answers[i] >> (bit_len-pos[i])) << (bit_len-pos[i]);
+	}
+	answers[len0] = noncalc_num;
+
+	for(int i=0;i<len0;i++)   answers[len0] -= answers[i];
+	for(int i=0;i<len0+1;i++) answer += (answers[i] << (len0-i));
+	for(int i=0;i<len0;i++)	  answer += ((calc_num & (1 << (len0-i-1))) >> (len0-i-1)) << (bit_len-pos[i]+(len0-i-1));
+	return answer;
+  }
 
   //qubit
   qubit::qubit(const cmplx a, const cmplx b){
@@ -104,5 +144,4 @@ namespace pqs{
 	os << *psi.getMatrix();
 	return os;
   }
-
 }

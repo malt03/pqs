@@ -9,6 +9,7 @@ namespace pqs{
   typedef complex<double> cmplx;
   typedef SparseMatrix<cmplx> sMatrix;
   typedef SparseMatrix<cmplx> qOperator;
+  typedef Triplet<cmplx> T;
   
   class qSystem;
   class qubit;
@@ -143,5 +144,29 @@ namespace pqs{
   ostream& operator<<(ostream& os, const qSystem psi){
 	os << *psi.getMatrix();
 	return os;
+  }
+
+
+  /**********テンソル積を求める**********
+  answer		- 答えを入れる
+  x,y			- 元の値
+  x_len,y_len	- 二次元配列の一辺の長さ
+  返り値		- 何となくanswerのポインタ
+  ************************************/
+  qOperator* tensor(qOperator* answer, qOperator& x, int x_len, qOperator& y, int y_len){
+	//コピー
+	qOperator _x(x);
+	qOperator _y(y);
+
+	//計算
+	int answer_len = x_len * y_len;
+	for(int i=0 ; i<answer_len ; i++)
+	  for(int j=0 ; j<answer_len ; j++){
+		cmplx ans;
+		if((ans = _x.coeff(i/y_len,j/y_len) * _y.coeff(i%y_len,j%y_len)) != cmplx(0,0))
+		  answer->coeffRef(i,j) = ans;
+	  }
+
+	return answer;
   }
 }

@@ -6,11 +6,8 @@
 using namespace std;
 using namespace pqs;
 
-
-
 int main(){
-  qOperator H2(64,64);
-  makeHadamard(&H2, 6);
+  Eigen::initParallel();
   
-  cout << H2 << endl;
+  
 }

@@ -6,6 +6,7 @@ using namespace Eigen;
 using namespace std;
 
 namespace pqs{
+  bool is_Parallel = true;
   typedef complex<double> cmplx;
   typedef SparseMatrix<cmplx> sMatrix;
   typedef SparseMatrix<cmplx> qOperator;
@@ -34,6 +35,7 @@ namespace pqs{
   class qubit{
   public:
 	cmplx state[2];
+	qubit(){}
 	qubit(const cmplx a, const cmplx b);
   };
 
